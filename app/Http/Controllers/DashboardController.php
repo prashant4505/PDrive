@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DriveFile;
 use App\Models\Folder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
