@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 class DriveFile extends Model
 {
@@ -52,11 +51,7 @@ class DriveFile extends Model
 
     public function getPreviewUrlAttribute(): ?string
     {
-        if ($this->disk !== 'public') {
-            return null;
-        }
-
-        return Storage::disk($this->disk)->url($this->path);
+        return route('files.content', $this);
     }
 
     public function getHumanSizeAttribute(): string

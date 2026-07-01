@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/files', [FileController::class, 'store'])->name('files.store');
     Route::get('/files/{file}', [FileController::class, 'show'])->name('files.show');
+    Route::get('/files/{file}/content', [FileController::class, 'content'])->name('files.content');
     Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
     Route::patch('/files/{file}', [FileController::class, 'update'])->name('files.update');
     Route::patch('/files/{file}/favorite', [FileController::class, 'favorite'])->name('files.favorite');

@@ -113,6 +113,7 @@
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
+                                        <a href="{{ route('folders.show', $folder) }}" class="rounded-2xl border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700">Open</a>
                                         <form method="POST" action="{{ route('folders.favorite', $folder) }}">
                                             @csrf
                                             @method('PATCH')
@@ -185,6 +186,7 @@
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
+                                        <a href="{{ route('files.show', $file) }}" class="rounded-2xl border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700">Open</a>
                                         <a href="{{ route('files.download', $file) }}" class="rounded-2xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">Download</a>
                                         <form method="POST" action="{{ route('files.favorite', $file) }}">
                                             @csrf

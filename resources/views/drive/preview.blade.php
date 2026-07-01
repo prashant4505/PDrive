@@ -3,6 +3,12 @@
         <div class="rounded-[2rem] border border-slate-200 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
+                    <a
+                        href="{{ $file->folder ? route('folders.show', $file->folder) : route('dashboard') }}"
+                        class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600"
+                    >
+                        Back to {{ $file->folder ? $file->folder->name : 'Home' }}
+                    </a>
                     <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">File preview</p>
                     <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{{ $file->original_name }}</h1>
                     <p class="mt-2 text-sm text-slate-500">{{ $file->human_size }} • {{ $file->mime_type ?: 'Unknown type' }}</p>

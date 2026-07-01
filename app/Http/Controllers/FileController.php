@@ -6,6 +6,7 @@ use App\Models\DriveFile;
 use App\Models\Folder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -55,6 +56,18 @@ class FileController extends Controller
         return view('drive.preview', [
             'file' => $file,
             'previewText' => $previewText,
+        ]);
+    }
+
+    public function content(Request $request, DriveFile $file): Response
+    {
+        $this->authorizeFile($request, $file);
+
+        abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
+
+        return Storage::disk($file->disk)->response($file->path, $file->original_name, [
+            'Content-Type' => $file->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="'.addslashes($file->original_name).'"',
         ]);
     }
 
@@ -162,6 +175,8 @@ class FileController extends Controller
     public function download(Request $request, DriveFile $file)
     {
         $this->authorizeFile($request, $file);
+
+        abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
 
         return Storage::disk($file->disk)->download($file->path, $file->original_name);
     }
