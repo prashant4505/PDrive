@@ -6,10 +6,10 @@ use App\Models\DriveFile;
 use App\Models\Folder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
@@ -59,7 +59,7 @@ class FileController extends Controller
         ]);
     }
 
-    public function content(Request $request, DriveFile $file): Response
+    public function content(Request $request, DriveFile $file): StreamedResponse
     {
         $this->authorizeFile($request, $file);
 
