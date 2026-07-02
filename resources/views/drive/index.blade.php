@@ -129,6 +129,14 @@
                                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
                                         <a href="{{ route('folders.show', $folder) }}" class="text-base font-semibold text-slate-950 hover:text-sky-700">{{ $folder->name }}</a>
+                                        <p class="mt-2 text-sm text-slate-500">
+                                            {{ $folder->children_count }} {{ \Illuminate\Support\Str::plural('folder', $folder->children_count) }}
+                                            •
+                                            {{ $folder->files_count }} {{ \Illuminate\Support\Str::plural('file', $folder->files_count) }}
+                                            @if ($folder->children_count === 0 && $folder->files_count === 0)
+                                                • Empty
+                                            @endif
+                                        </p>
                                         <p class="mt-1 text-xs uppercase tracking-[0.25em] text-slate-400">{{ $folder->updated_at->diffForHumans() }}</p>
                                     </div>
 

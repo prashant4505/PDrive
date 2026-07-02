@@ -65,7 +65,9 @@ class DashboardController extends Controller
         $user = $request->user();
         $query = trim((string) $request->string('q'));
 
-        $foldersQuery = Folder::ownedBy($user)->where('parent_id', $folder?->id);
+        $foldersQuery = Folder::ownedBy($user)
+            ->where('parent_id', $folder?->id)
+            ->withCount(['children', 'files']);
         $filesQuery = DriveFile::ownedBy($user)->where('folder_id', $folder?->id);
 
         if ($query !== '') {
