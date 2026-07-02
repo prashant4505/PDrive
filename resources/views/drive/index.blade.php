@@ -201,40 +201,43 @@
                             <article
                                 x-data="{ menuOpen: false, panel: null }"
                                 @click.outside="menuOpen = false"
-                                class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(15,23,42,0.08)]"
+                                :class="menuOpen ? 'z-30' : 'z-0'"
+                                class="relative overflow-visible rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(15,23,42,0.08)]"
                             >
-                                <div class="relative aspect-[4/3] border-b border-slate-200 bg-slate-100">
-                                    @if ($file->isImage())
-                                        <button
-                                            type="button"
-                                            @click="openImage(@js($file->preview_url), @js($file->original_name))"
-                                            class="block h-full w-full"
-                                        >
-                                            <img
-                                                src="{{ $file->preview_url }}"
-                                                alt="{{ $file->original_name }}"
-                                                class="h-full w-full object-cover"
+                                <div class="relative">
+                                    <div class="aspect-[4/3] overflow-hidden rounded-t-[1.5rem] border-b border-slate-200 bg-slate-100">
+                                        @if ($file->isImage())
+                                            <button
+                                                type="button"
+                                                @click="openImage(@js($file->preview_url), @js($file->original_name))"
+                                                class="block h-full w-full"
                                             >
-                                        </button>
-                                    @elseif ($file->isPdf())
-                                        <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50 via-white to-slate-100 p-6 text-center">
-                                            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
-                                                <svg viewBox="0 0 24 24" class="h-8 w-8 fill-current" aria-hidden="true">
-                                                    <path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Zm6.25 1.8c.16.03.31.11.43.23l3.54 3.54c.12.12.2.27.23.43h-3.2a1 1 0 0 1-1-1v-3.2ZM8 13.25h8a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1 0-1.5Zm0 3h5a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1 0-1.5Z"/>
-                                                </svg>
-                                            </div>
-                                            <p class="mt-4 text-sm font-semibold uppercase tracking-[0.3em] text-rose-500">PDF</p>
-                                        </a>
-                                    @else
-                                        <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6 text-center">
-                                            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                                                <svg viewBox="0 0 24 24" class="h-8 w-8 fill-current" aria-hidden="true">
-                                                    <path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Zm6.25 1.8c.16.03.31.11.43.23l3.54 3.54c.12.12.2.27.23.43h-3.2a1 1 0 0 1-1-1v-3.2ZM8 13h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 8 13Zm0 3h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 8 16Z"/>
-                                                </svg>
-                                            </div>
-                                            <p class="mt-4 text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">{{ strtoupper($file->extension ?: 'file') }}</p>
-                                        </a>
-                                    @endif
+                                                <img
+                                                    src="{{ $file->preview_url }}"
+                                                    alt="{{ $file->original_name }}"
+                                                    class="h-full w-full object-cover"
+                                                >
+                                            </button>
+                                        @elseif ($file->isPdf())
+                                            <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50 via-white to-slate-100 p-6 text-center">
+                                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+                                                    <svg viewBox="0 0 24 24" class="h-8 w-8 fill-current" aria-hidden="true">
+                                                        <path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Zm6.25 1.8c.16.03.31.11.43.23l3.54 3.54c.12.12.2.27.23.43h-3.2a1 1 0 0 1-1-1v-3.2ZM8 13.25h8a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1 0-1.5Zm0 3h5a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1 0-1.5Z"/>
+                                                    </svg>
+                                                </div>
+                                                <p class="mt-4 text-sm font-semibold uppercase tracking-[0.3em] text-rose-500">PDF</p>
+                                            </a>
+                                        @else
+                                            <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6 text-center">
+                                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                                                    <svg viewBox="0 0 24 24" class="h-8 w-8 fill-current" aria-hidden="true">
+                                                        <path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Zm6.25 1.8c.16.03.31.11.43.23l3.54 3.54c.12.12.2.27.23.43h-3.2a1 1 0 0 1-1-1v-3.2ZM8 13h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 8 13Zm0 3h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 8 16Z"/>
+                                                    </svg>
+                                                </div>
+                                                <p class="mt-4 text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">{{ strtoupper($file->extension ?: 'file') }}</p>
+                                            </a>
+                                        @endif
+                                    </div>
 
                                     <div class="absolute right-3 top-3">
                                         <button
@@ -252,7 +255,7 @@
                                             x-cloak
                                             x-show="menuOpen"
                                             x-transition.opacity.scale.origin.top.right
-                                            class="absolute right-0 top-12 z-20 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.14)]"
+                                            class="absolute right-0 top-12 z-40 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_45px_rgba(15,23,42,0.14)]"
                                         >
                                             @if ($file->isImage())
                                                 <button type="button" @click="openImage(@js($file->preview_url), @js($file->original_name)); menuOpen = false" class="flex w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Open</button>
