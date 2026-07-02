@@ -43,7 +43,7 @@
                                 placeholder="Search files and folders in this view"
                                 class="w-full bg-transparent px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                             >
-                            <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white">Search</button>
+                            <button class="bg-slate-950 px-4 py-2 text-sm font-medium text-white">Search</button>
                         </div>
                     </form>
                 </div>
