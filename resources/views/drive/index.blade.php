@@ -1,24 +1,15 @@
 <x-app-layout>
+@php
+    $imageFiles = $files->filter(fn($f) => $f->isImage())->values();
+    $galleryImages = $imageFiles->map(fn($f) => ['src' => $f->preview_url, 'name' => $f->original_name])->values()->all();
+    $imageIndexMap = $imageFiles->pluck('id')->flip();
+@endphp
 <div
-    x-data="{
-        viewerOpen: false,
-        viewerSrc: '',
-        viewerName: '',
-        actionPanel: null,
-        openImage(src, name) {
-            this.viewerSrc = src;
-            this.viewerName = name;
-            this.viewerOpen = true;
-            document.body.classList.add('overflow-hidden');
-        },
-        closeImage() {
-            this.viewerOpen = false;
-            this.viewerSrc = '';
-            this.viewerName = '';
-            document.body.classList.remove('overflow-hidden');
-        },
-    }"
-    @keydown.escape.window="viewerOpen ? closeImage() : (actionPanel = null)"
+    x-data="{ actionPanel: null }"
+    x-init="$store.viewer.images = @js($galleryImages)"
+    @keydown.escape.window="$store.viewer.open ? $store.viewer.close() : (actionPanel = null)"
+    @keydown.arrow-left.window="$store.viewer.open && $store.viewer.prev()"
+    @keydown.arrow-right.window="$store.viewer.open && $store.viewer.next()"
 >
 
     {{-- Page header --}}
@@ -170,7 +161,8 @@
                             <button
                                 type="button"
                                 @click.prevent.stop="menuOpen = !menuOpen"
-                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/80 text-gray-400 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white hover:text-gray-700"
+                                :class="menuOpen ? 'bg-gray-100 text-gray-900 ring-gray-300' : 'bg-white text-gray-600 ring-gray-200 hover:bg-gray-100 hover:text-gray-900'"
+                                class="flex h-7 w-7 items-center justify-center rounded-lg shadow-sm ring-1 transition-colors"
                                 aria-label="Folder actions"
                             >
                                 <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/></svg>
@@ -291,9 +283,12 @@
                         class="group relative overflow-visible rounded-xl border border-gray-200 bg-white transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100"
                     >
                         {{-- Thumbnail / icon --}}
+                        @if ($file->isImage())
+                            @php $galleryIndex = $imageIndexMap[$file->id] ?? 0; @endphp
+                        @endif
                         <div class="aspect-[4/3] overflow-hidden rounded-t-xl border-b border-gray-100 bg-gray-50">
                             @if ($file->isImage())
-                                <button type="button" @click="openImage(@js($file->preview_url), @js($file->original_name))" class="block h-full w-full">
+                                <button type="button" @click="$store.viewer.show({{ $galleryIndex }})" class="block h-full w-full cursor-zoom-in">
                                     <img src="{{ $file->preview_url }}" alt="{{ $file->original_name }}" class="h-full w-full object-cover transition-transform hover:scale-105">
                                 </button>
                             @elseif ($file->isPdf())
@@ -330,7 +325,7 @@
                         {{-- File info --}}
                         <div class="p-3">
                             @if ($file->isImage())
-                                <button type="button" @click="openImage(@js($file->preview_url), @js($file->original_name))" class="block w-full truncate text-left text-xs font-semibold text-gray-800 hover:text-indigo-600">{{ $file->original_name }}</button>
+                                <button type="button" @click="$store.viewer.show({{ $galleryIndex }})" class="block w-full truncate text-left text-xs font-semibold text-gray-800 hover:text-indigo-600">{{ $file->original_name }}</button>
                             @else
                                 <a href="{{ route('files.show', $file) }}" class="block truncate text-xs font-semibold text-gray-800 hover:text-indigo-600">{{ $file->original_name }}</a>
                             @endif
@@ -342,7 +337,8 @@
                             <button
                                 type="button"
                                 @click.prevent.stop="menuOpen = !menuOpen"
-                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-gray-400 opacity-0 shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 hover:bg-white hover:text-gray-700"
+                                :class="menuOpen ? 'bg-gray-900 text-white' : 'bg-white/95 text-gray-700 ring-1 ring-black/10 hover:bg-white hover:text-gray-900'"
+                                class="flex h-7 w-7 items-center justify-center rounded-lg shadow-md transition-colors"
                             >
                                 <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/></svg>
                             </button>
@@ -354,7 +350,7 @@
                                 class="absolute right-0 top-9 z-40 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl shadow-gray-200/80"
                             >
                                 @if ($file->isImage())
-                                    <button type="button" @click="openImage(@js($file->preview_url), @js($file->original_name)); menuOpen = false" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Open</button>
+                                    <button type="button" @click="$store.viewer.show({{ $galleryIndex }}); menuOpen = false" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Open</button>
                                 @else
                                     <a href="{{ route('files.show', $file) }}" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Open</a>
                                 @endif
@@ -419,20 +415,63 @@
     </div>
 </div>
 
-{{-- Image lightbox --}}
+{{-- Image viewer --}}
 <div
-    x-show="viewerOpen"
+    x-show="$store.viewer.open"
     x-cloak
     x-transition.opacity
-    class="fixed inset-0 z-[80] flex items-start justify-center bg-black/90 p-4 pt-16"
-    @click.self="closeImage()"
+    class="fixed inset-0 z-[80] flex items-center justify-center bg-black/92 select-none"
+    @click.self="$store.viewer.close()"
+    @touchstart.passive="$store.viewer.touchStartX = $event.touches[0].clientX"
+    @touchend.passive="(() => { const dx = $event.changedTouches[0].clientX - $store.viewer.touchStartX; if (Math.abs(dx) > 50) { dx < 0 ? $store.viewer.next() : $store.viewer.prev(); } })()"
 >
-    <button @click="closeImage()" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+    {{-- Top bar --}}
+    <div class="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-4 py-4">
+        <p class="max-w-xs truncate text-sm font-medium text-white/80" x-text="$store.viewer.current.name"></p>
+        <div class="pointer-events-auto flex items-center gap-3">
+            <span class="text-xs text-white/50" x-text="`${$store.viewer.index + 1} / ${$store.viewer.images.length}`"></span>
+            <button @click="$store.viewer.close()" class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/25">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+    </div>
+
+    {{-- Prev --}}
+    <button
+        x-show="$store.viewer.index > 0"
+        @click.stop="$store.viewer.prev()"
+        class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25"
+    >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
     </button>
-    <div class="max-w-5xl w-full">
-        <p class="mb-3 truncate text-center text-sm text-white/70" x-text="viewerName"></p>
-        <img :src="viewerSrc" :alt="viewerName" class="max-h-[80vh] w-full rounded-2xl object-contain">
+
+    {{-- Image --}}
+    <div class="flex max-h-screen w-full max-w-5xl items-center justify-center px-16 py-16" @click.stop>
+        <img
+            :src="$store.viewer.current.src"
+            :alt="$store.viewer.current.name"
+            class="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
+        >
+    </div>
+
+    {{-- Next --}}
+    <button
+        x-show="$store.viewer.index < $store.viewer.images.length - 1"
+        @click.stop="$store.viewer.next()"
+        class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25"
+    >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+    </button>
+
+    {{-- Dot indicators --}}
+    <div x-show="$store.viewer.images.length > 1" class="absolute bottom-5 flex items-center gap-1.5">
+        <template x-for="(img, i) in $store.viewer.images" :key="i">
+            <button
+                @click.stop="$store.viewer.index = i"
+                :class="i === $store.viewer.index ? 'bg-white w-5' : 'bg-white/40 w-2 hover:bg-white/70'"
+                class="h-2 rounded-full transition-all duration-200"
+            ></button>
+        </template>
     </div>
 </div>
 
