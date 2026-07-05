@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DriveFile;
 use App\Models\Folder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,21 +14,30 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    /**
+     * Uploads are sent one file per request by the upload-queue UI so each
+     * file gets its own progress bar and a slow/large file can't block or
+     * time out the others.
+     */
+    public const MAX_UPLOAD_KB = 2097152; // 2GB
+
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'folder_id' => ['nullable', 'integer'],
             'files' => ['required', 'array', 'min:1'],
-            'files.*' => ['required', 'file', 'max:51200'],
+            'files.*' => ['required', 'file', 'max:'.self::MAX_UPLOAD_KB],
         ]);
 
         $folder = $this->folderFromRequest($request, $data['folder_id'] ?? null);
+
+        $created = [];
 
         foreach ($request->file('files', []) as $upload) {
             $storedName = Str::uuid().'.'.$upload->getClientOriginalExtension();
             $path = $upload->storeAs('uploads', $storedName, 'public');
 
-            DriveFile::create([
+            $created[] = DriveFile::create([
                 'user_id' => $request->user()->id,
                 'folder_id' => $folder?->id,
                 'original_name' => $upload->getClientOriginalName(),
@@ -38,6 +48,10 @@ class FileController extends Controller
                 'extension' => $upload->getClientOriginalExtension(),
                 'size' => $upload->getSize(),
             ]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok', 'files' => $created]);
         }
 
         return back()->with('status', 'Files uploaded.');

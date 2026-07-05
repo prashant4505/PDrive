@@ -7,6 +7,7 @@ use App\Models\Folder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class DashboardController extends Controller
 {
@@ -85,6 +86,7 @@ class DashboardController extends Controller
             'recentUploads' => DriveFile::ownedBy($user)->latest()->limit(5)->get(),
             'query' => $query,
             'allFolders' => Folder::ownedBy($user)->orderBy('name')->get(),
+            'maxUploadBytes' => min(UploadedFile::getMaxFilesize(), FileController::MAX_UPLOAD_KB * 1024),
         ]);
     }
 

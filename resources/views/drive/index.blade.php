@@ -84,18 +84,53 @@
         </form>
     </div>
 
-    <div x-show="actionPanel === 'upload'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="border-b border-indigo-100 bg-indigo-50 px-6 py-4">
-        <form method="POST" action="{{ route('files.store') }}" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
-            @csrf
-            <input type="hidden" name="folder_id" value="{{ $currentFolder?->id }}">
+    <div
+        x-show="actionPanel === 'upload'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+        x-data="uploadQueue(@js(route('files.store')), @js($currentFolder?->id), @js($maxUploadBytes))"
+        class="border-b border-indigo-100 bg-indigo-50 px-6 py-4"
+    >
+        <div class="flex flex-wrap items-center gap-3">
             <input
-                type="file" name="files[]" multiple
-                class="block rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-700
+                type="file" multiple :disabled="uploading"
+                @change="addFiles($event.target.files); $event.target.value = ''"
+                class="block rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50
                        file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-500"
             >
-            <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">Upload now</button>
-            <button type="button" @click="actionPanel = null" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-        </form>
+            <button type="button" @click="startUpload()" :disabled="uploading || ! hasPending" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors">
+                <span x-show="! uploading">Upload now</span>
+                <span x-show="uploading" x-cloak>Uploading… <span x-text="overallProgress"></span>%</span>
+            </button>
+            <button type="button" @click="reset(); actionPanel = null" :disabled="uploading" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors">Cancel</button>
+        </div>
+
+        {{-- Upload queue --}}
+        <div x-show="queue.length > 0" x-cloak class="mt-3 space-y-2">
+            <template x-for="item in queue" :key="item.name + item.size">
+                <div class="flex items-center gap-3 rounded-xl border border-indigo-200 bg-white px-3 py-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="truncate text-xs font-semibold text-gray-800" x-text="item.name"></span>
+                            <span class="shrink-0 text-[11px] text-gray-400" x-text="formatSize(item.size)"></span>
+                        </div>
+                        <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                            <div
+                                class="h-full rounded-full transition-all"
+                                :class="item.status === 'error' ? 'bg-rose-400' : (item.status === 'done' ? 'bg-emerald-500' : 'bg-indigo-500')"
+                                :style="`width: ${item.status === 'error' ? 100 : item.progress}%`"
+                            ></div>
+                        </div>
+                        <p class="mt-1 text-[11px]" :class="item.status === 'error' ? 'text-rose-500' : 'text-gray-400'">
+                            <span x-show="item.status === 'pending'">Waiting…</span>
+                            <span x-show="item.status === 'uploading'">Uploading — <span x-text="item.progress"></span>%</span>
+                            <span x-show="item.status === 'done'">Uploaded</span>
+                            <span x-show="item.status === 'error'" x-text="item.error"></span>
+                        </p>
+                    </div>
+                    <button type="button" x-show="item.status === 'error'" @click="retry(item)" class="shrink-0 rounded-lg border border-rose-200 px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50">Retry</button>
+                    <button type="button" x-show="item.status !== 'uploading'" @click="removeFile(item)" class="shrink-0 rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-50">✕</button>
+                </div>
+            </template>
+        </div>
     </div>
 
     {{-- Content area --}}
