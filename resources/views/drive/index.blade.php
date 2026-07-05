@@ -96,6 +96,24 @@
                 class="block rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50
                        file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-500"
             >
+
+            {{-- Dedicated photo/video picker: on mobile, an explicit image/video accept filter
+                 is what makes the OS open the native Photos/Gallery picker with multi-select,
+                 instead of a generic single-select file browser. --}}
+            <input
+                type="file" accept="image/*,video/*" multiple :disabled="uploading"
+                x-ref="galleryInput"
+                @change="addFiles($event.target.files); $event.target.value = ''"
+                class="hidden"
+            >
+            <button
+                type="button" @click="$refs.galleryInput.click()" :disabled="uploading"
+                class="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 transition-colors"
+            >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3 4.5h18M3.75 4.5v15A2.25 2.25 0 0 0 6 21.75h12a2.25 2.25 0 0 0 2.25-2.25v-15" /></svg>
+                Photos &amp; videos
+            </button>
+
             <button type="button" @click="startUpload()" :disabled="uploading || ! hasPending" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors">
                 <span x-show="! uploading">Upload now</span>
                 <span x-show="uploading" x-cloak>Uploading… <span x-text="overallProgress"></span>%</span>
