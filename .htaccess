@@ -1,0 +1,42 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+Options -MultiViews
+
+# ----------------------------------------
+# 1. Remove /public from URL before any other rewrite/redirect.
+# ----------------------------------------
+RewriteRule ^public(?:/(.*))?$ https://storage.thebitterreality.com/$1 [R=301,L,NE]
+
+# ----------------------------------------
+# 2. Force HTTPS
+# ----------------------------------------
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://storage.thebitterreality.com/$1 [L,R=301]
+
+# ----------------------------------------
+# 3. Remove www
+# ----------------------------------------
+RewriteCond %{HTTP_HOST} ^www\.storage\.thebitterreality\.com$ [NC]
+RewriteRule ^(.*)$ https://storage.thebitterreality.com/$1 [L,R=301]
+
+# ----------------------------------------
+# 4. Internally route to /public
+# ----------------------------------------
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ /public/$1 [L]
+
+# ----------------------------------------
+# 5. Front Controller (Laravel)
+# ----------------------------------------
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /public/index.php [L]
+
+# ----------------------------------------
+# 6. Protect sensitive files
+# ----------------------------------------
+<FilesMatch "^.*\.(env|ini|log|bak|swp|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+</IfModule>
