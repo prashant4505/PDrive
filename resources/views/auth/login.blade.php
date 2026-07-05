@@ -34,10 +34,5 @@
         <button type="submit" class="flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
             Sign in
         </button>
-
-        <p class="text-center text-sm text-gray-500">
-            Don't have an account?
-            <a href="{{ route('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-500">Create one</a>
-        </p>
     </form>
 </x-guest-layout>
