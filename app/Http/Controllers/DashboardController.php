@@ -111,6 +111,7 @@ class DashboardController extends Controller
     protected function breadcrumbs(?Folder $folder): Collection
     {
         $items = collect();
+        $folder = $folder?->parent;
 
         while ($folder) {
             $items->prepend($folder);

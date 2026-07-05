@@ -14,10 +14,10 @@
 
     {{-- Page header --}}
     <div class="border-b border-gray-200 bg-white px-6 py-4">
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
 
             {{-- Breadcrumb --}}
-            <div class="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+            <div class="flex min-w-0 items-center gap-1.5 overflow-x-auto text-sm sm:flex-1">
                 <a href="{{ route('dashboard') }}" class="shrink-0 font-semibold text-gray-900 hover:text-indigo-600 transition-colors">My Drive</a>
                 @foreach ($breadcrumbs as $crumb)
                     <svg class="h-4 w-4 shrink-0 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
@@ -31,9 +31,9 @@
 
             {{-- Search --}}
             <form method="GET" action="{{ $currentFolder ? route('folders.show', $currentFolder) : route('dashboard') }}" class="flex items-center gap-2">
-                <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition">
+                <div class="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition sm:w-auto">
                     <svg class="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-                    <input name="q" value="{{ $query }}" placeholder="Search…" class="w-44 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="q" value="{{ $query }}" placeholder="Search…" class="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 sm:w-44">
                 </div>
             </form>
 
