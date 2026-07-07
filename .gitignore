@@ -9,6 +9,7 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
+.lando/
 /.cursor/
 /.idea
 /.nova
