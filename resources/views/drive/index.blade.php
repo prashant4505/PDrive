@@ -3,6 +3,7 @@
     $imageFiles = $files->filter(fn($f) => $f->isImage())->values();
     $galleryImages = $imageFiles->map(fn($f) => ['src' => $f->preview_url, 'name' => $f->original_name])->values()->all();
     $imageIndexMap = $imageFiles->pluck('id')->flip();
+    $fileIds = $files->pluck('id')->values()->all();
 @endphp
 <div
     x-data="{ actionPanel: null }"
@@ -315,11 +316,83 @@
 
         {{-- Files --}}
         <div>
-            <div class="mb-3 flex items-center justify-between">
-                <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400">Files</h2>
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400">Files</h2>
+                    @if($files->isNotEmpty())
+                        <span class="text-xs text-gray-400">{{ $files->count() }}</span>
+                    @endif
+                </div>
                 @if($files->isNotEmpty())
-                    <span class="text-xs text-gray-400">{{ $files->count() }}</span>
+                    <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                        <input
+                            type="checkbox"
+                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            :checked="@js($fileIds).every(id => $store.selection.has(id))"
+                            @change="$event.target.checked ? $store.selection.selectAll(@js($fileIds)) : $store.selection.clear()"
+                        >
+                        Select all
+                    </label>
                 @endif
+            </div>
+
+            {{-- Bulk action bar --}}
+            <div
+                x-data="{ bulkPanel: null }"
+                x-show="$store.selection.count > 0"
+                x-cloak
+                x-transition
+                class="mb-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3"
+            >
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-sm font-semibold text-indigo-900"><span x-text="$store.selection.count"></span> selected</span>
+                    <button type="button" @click="bulkPanel = bulkPanel === 'move' ? null : 'move'" class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Move</button>
+                    <button type="button" @click="bulkPanel = bulkPanel === 'copy' ? null : 'copy'" class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Copy</button>
+                    <button type="button" @click="bulkPanel = bulkPanel === 'delete' ? null : 'delete'" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50">Delete</button>
+                    <button type="button" @click="$store.selection.clear(); bulkPanel = null" class="ml-auto text-xs font-medium text-gray-500 hover:text-gray-700">Clear selection</button>
+                </div>
+
+                <div x-show="bulkPanel === 'move'" x-cloak x-transition class="mt-3">
+                    <form method="POST" action="{{ route('files.bulk-move') }}" class="flex flex-wrap items-center gap-2">
+                        @csrf @method('PATCH')
+                        <template x-for="id in $store.selection.ids" :key="id">
+                            <input type="hidden" name="file_ids[]" :value="id">
+                        </template>
+                        <select name="folder_id" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:border-indigo-400 focus:outline-none">
+                            <option value="">Root</option>
+                            @foreach ($allFolders as $tf)<option value="{{ $tf->id }}" @selected($currentFolder?->id === $tf->id)>{{ $tf->name }}</option>@endforeach
+                        </select>
+                        <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-700">Move</button>
+                        <button type="button" @click="bulkPanel = null" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+                    </form>
+                </div>
+
+                <div x-show="bulkPanel === 'copy'" x-cloak x-transition class="mt-3">
+                    <form method="POST" action="{{ route('files.bulk-copy') }}" class="flex flex-wrap items-center gap-2">
+                        @csrf
+                        <template x-for="id in $store.selection.ids" :key="id">
+                            <input type="hidden" name="file_ids[]" :value="id">
+                        </template>
+                        <select name="folder_id" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:border-indigo-400 focus:outline-none">
+                            <option value="">Root</option>
+                            @foreach ($allFolders as $tf)<option value="{{ $tf->id }}" @selected($currentFolder?->id === $tf->id)>{{ $tf->name }}</option>@endforeach
+                        </select>
+                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500">Copy</button>
+                        <button type="button" @click="bulkPanel = null" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+                    </form>
+                </div>
+
+                <div x-show="bulkPanel === 'delete'" x-cloak x-transition class="mt-3">
+                    <form method="POST" action="{{ route('files.bulk-destroy') }}" class="flex flex-wrap items-center gap-3">
+                        @csrf @method('DELETE')
+                        <template x-for="id in $store.selection.ids" :key="id">
+                            <input type="hidden" name="file_ids[]" :value="id">
+                        </template>
+                        <p class="text-xs text-gray-600">Move <span x-text="$store.selection.count"></span> file(s) to trash?</p>
+                        <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500">Delete</button>
+                        <button type="button" @click="bulkPanel = null" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+                    </form>
+                </div>
             </div>
 
             @if($files->isEmpty())
@@ -332,9 +405,21 @@
                     <article
                         x-data="{ menuOpen: false, panel: null }"
                         @click.outside="menuOpen = false"
-                        :class="menuOpen ? 'z-30' : 'z-0'"
+                        :class="[menuOpen ? 'z-30' : 'z-0', $store.selection.has({{ $file->id }}) ? 'ring-2 ring-indigo-500 ring-offset-1' : '']"
                         class="group relative overflow-visible rounded-xl border border-gray-200 bg-white transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100"
                     >
+                        {{-- Selection checkbox --}}
+                        <div class="absolute left-1.5 top-1.5 z-10">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 cursor-pointer rounded border-gray-300 bg-white text-indigo-600 shadow focus:ring-indigo-500"
+                                :class="$store.selection.has({{ $file->id }}) ? '' : 'opacity-0 group-hover:opacity-100'"
+                                :checked="$store.selection.has({{ $file->id }})"
+                                @click.stop
+                                @change="$store.selection.toggle({{ $file->id }})"
+                            >
+                        </div>
+
                         {{-- Thumbnail / icon --}}
                         @if ($file->isImage())
                             @php $galleryIndex = $imageIndexMap[$file->id] ?? 0; @endphp

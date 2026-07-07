@@ -28,6 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/trash/folders/{folder}/force', [FolderController::class, 'forceDestroy'])->name('folders.force-delete');
 
     Route::post('/files', [FileController::class, 'store'])->name('files.store');
+    Route::patch('/files/bulk/move', [FileController::class, 'bulkMove'])->name('files.bulk-move');
+    Route::post('/files/bulk/copy', [FileController::class, 'bulkCopy'])->name('files.bulk-copy');
+    Route::delete('/files/bulk', [FileController::class, 'bulkDestroy'])->name('files.bulk-destroy');
     Route::get('/files/{file}', [FileController::class, 'show'])->name('files.show');
     Route::get('/files/{file}/content', [FileController::class, 'content'])->name('files.content');
     Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');

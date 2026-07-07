@@ -161,6 +161,67 @@ class FileController extends Controller
         return back()->with('status', 'File copied.');
     }
 
+    public function bulkMove(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'file_ids' => ['required', 'array', 'min:1'],
+            'file_ids.*' => ['integer'],
+            'folder_id' => ['nullable', 'integer'],
+        ]);
+
+        $folder = $this->folderFromRequest($request, $data['folder_id'] ?? null);
+        $files = $this->ownedFilesOrFail($request, $data['file_ids']);
+
+        DriveFile::whereIn('id', $files->pluck('id'))->update(['folder_id' => $folder?->id]);
+
+        return back()->with('status', $files->count().' file'.($files->count() === 1 ? '' : 's').' moved.');
+    }
+
+    public function bulkCopy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'file_ids' => ['required', 'array', 'min:1'],
+            'file_ids.*' => ['integer'],
+            'folder_id' => ['nullable', 'integer'],
+        ]);
+
+        $folder = $this->folderFromRequest($request, $data['folder_id'] ?? null);
+        $files = $this->ownedFilesOrFail($request, $data['file_ids']);
+
+        foreach ($files as $file) {
+            $newPath = 'uploads/'.Str::uuid().'_'.$file->stored_name;
+            Storage::disk($file->disk)->copy($file->path, $newPath);
+
+            DriveFile::create([
+                'user_id' => $request->user()->id,
+                'folder_id' => $folder?->id,
+                'original_name' => pathinfo($file->original_name, PATHINFO_FILENAME).' Copy'.($file->extension ? '.'.$file->extension : ''),
+                'stored_name' => basename($newPath),
+                'disk' => $file->disk,
+                'path' => $newPath,
+                'mime_type' => $file->mime_type,
+                'extension' => $file->extension,
+                'size' => $file->size,
+            ]);
+        }
+
+        return back()->with('status', $files->count().' file'.($files->count() === 1 ? '' : 's').' copied.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'file_ids' => ['required', 'array', 'min:1'],
+            'file_ids.*' => ['integer'],
+        ]);
+
+        $files = $this->ownedFilesOrFail($request, $data['file_ids']);
+
+        DriveFile::destroy($files->pluck('id'));
+
+        return back()->with('status', $files->count().' file'.($files->count() === 1 ? '' : 's').' moved to trash.');
+    }
+
     public function destroy(Request $request, DriveFile $file): RedirectResponse
     {
         $this->authorizeFile($request, $file);
@@ -222,5 +283,18 @@ class FileController extends Controller
     protected function authorizeFile(Request $request, DriveFile $file): void
     {
         abort_unless($file->user_id === $request->user()->id, 404);
+    }
+
+    /**
+     * @param  array<int>  $fileIds
+     * @return \Illuminate\Database\Eloquent\Collection<int, DriveFile>
+     */
+    protected function ownedFilesOrFail(Request $request, array $fileIds): \Illuminate\Database\Eloquent\Collection
+    {
+        $files = DriveFile::ownedBy($request->user())->whereIn('id', $fileIds)->get();
+
+        abort_unless($files->count() === count(array_unique($fileIds)), 404);
+
+        return $files;
     }
 }

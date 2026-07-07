@@ -22,6 +22,17 @@ Alpine.store('viewer', {
     next() { if (this.index < this.images.length - 1) this.index++; },
 });
 
+Alpine.store('selection', {
+    ids: [],
+    has(id) { return this.ids.includes(id); },
+    toggle(id) {
+        this.ids = this.has(id) ? this.ids.filter((i) => i !== id) : [...this.ids, id];
+    },
+    selectAll(ids) { this.ids = [...ids]; },
+    clear() { this.ids = []; },
+    get count() { return this.ids.length; },
+});
+
 Alpine.data('uploadQueue', (endpoint, folderId, maxUploadBytes) => ({
     endpoint,
     folderId,
