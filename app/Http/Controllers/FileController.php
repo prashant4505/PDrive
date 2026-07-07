@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController extends Controller
@@ -44,7 +45,7 @@ class FileController extends Controller
                 'stored_name' => $storedName,
                 'disk' => 'public',
                 'path' => $path,
-                'mime_type' => $upload->getClientMimeType(),
+                'mime_type' => $upload->getMimeType() ?: $upload->getClientMimeType(),
                 'extension' => $upload->getClientOriginalExtension(),
                 'size' => $upload->getSize(),
             ]);
@@ -73,16 +74,27 @@ class FileController extends Controller
         ]);
     }
 
-    public function content(Request $request, DriveFile $file): StreamedResponse
+    public function content(Request $request, DriveFile $file): BinaryFileResponse|StreamedResponse
     {
         $this->authorizeFile($request, $file);
 
-        abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
+        $disk = Storage::disk($file->disk);
 
-        return Storage::disk($file->disk)->response($file->path, $file->original_name, [
+        abort_unless($disk->exists($file->path), 404);
+
+        $headers = [
             'Content-Type' => $file->mime_type ?: 'application/octet-stream',
             'Content-Disposition' => 'inline; filename="'.addslashes($file->original_name).'"',
-        ]);
+        ];
+
+        // Local disks are served as a real file so Symfony can honor HTTP Range
+        // requests, which video/audio players need for seeking and which
+        // Safari/iOS require just to start playback at all.
+        if (config("filesystems.disks.{$file->disk}.driver") === 'local') {
+            return response()->file($disk->path($file->path), $headers);
+        }
+
+        return $disk->response($file->path, $file->original_name, $headers);
     }
 
     public function update(Request $request, DriveFile $file): RedirectResponse
