@@ -22,6 +22,14 @@ Alpine.store('viewer', {
     next() { if (this.index < this.images.length - 1) this.index++; },
 });
 
+Alpine.store('view', {
+    mode: localStorage.getItem('pdriveViewMode') || 'grid',
+    set(mode) {
+        this.mode = mode;
+        localStorage.setItem('pdriveViewMode', mode);
+    },
+});
+
 Alpine.store('selection', {
     ids: [],
     has(id) { return this.ids.includes(id); },

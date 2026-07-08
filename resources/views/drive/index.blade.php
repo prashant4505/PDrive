@@ -324,15 +324,26 @@
                     @endif
                 </div>
                 @if($files->isNotEmpty())
-                    <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50">
-                        <input
-                            type="checkbox"
-                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-0"
-                            :checked="@js($fileIds).every(id => $store.selection.has(id))"
-                            @change="$event.target.checked ? $store.selection.selectAll(@js($fileIds)) : $store.selection.clear()"
-                        >
-                        Select all
-                    </label>
+                    <div class="flex items-center gap-3">
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-0"
+                                :checked="@js($fileIds).every(id => $store.selection.has(id))"
+                                @change="$event.target.checked ? $store.selection.selectAll(@js($fileIds)) : $store.selection.clear()"
+                            >
+                            Select all
+                        </label>
+
+                        <div class="flex items-center gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+                            <button type="button" @click="$store.view.set('grid')" :class="$store.view.mode === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'" class="flex h-6 w-6 items-center justify-center rounded-md transition-colors" title="Grid view">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+                            </button>
+                            <button type="button" @click="$store.view.set('list')" :class="$store.view.mode === 'list' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'" class="flex h-6 w-6 items-center justify-center rounded-md transition-colors" title="List view">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                            </button>
+                        </div>
+                    </div>
                 @endif
             </div>
 
@@ -433,7 +444,7 @@
                     No files yet — click <strong class="mx-1 text-gray-600">Upload</strong> to add some.
                 </div>
             @else
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div :class="$store.view.mode === 'grid' ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' : 'flex flex-col gap-2'">
                     @foreach ($files as $file)
                     <article
                         x-data="{ menuOpen: false, panel: null }"
@@ -441,12 +452,13 @@
                         :class="[menuOpen ? 'z-30' : 'z-0', $store.selection.has({{ $file->id }}) ? 'ring-2 ring-indigo-500 ring-offset-1' : '']"
                         class="group relative overflow-visible rounded-xl border border-gray-200 bg-white transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100"
                     >
+                    <div :class="$store.view.mode === 'list' ? 'flex items-center gap-3 p-2' : ''">
                         {{-- Selection checkbox --}}
-                        <div class="absolute left-1.5 top-1.5 z-10">
+                        <div :class="$store.view.mode === 'grid' ? 'absolute left-1.5 top-1.5 z-10' : 'shrink-0'">
                             <input
                                 type="checkbox"
                                 class="h-4 w-4 cursor-pointer rounded border-gray-300 bg-white text-indigo-600 shadow focus:ring-indigo-500"
-                                :class="$store.selection.has({{ $file->id }}) ? '' : 'opacity-0 group-hover:opacity-100'"
+                                :class="$store.view.mode === 'grid' ? ($store.selection.has({{ $file->id }}) ? '' : 'opacity-0 group-hover:opacity-100') : ''"
                                 :checked="$store.selection.has({{ $file->id }})"
                                 @click.stop
                                 @change="$store.selection.toggle({{ $file->id }})"
@@ -457,44 +469,44 @@
                         @if ($file->isImage())
                             @php $galleryIndex = $imageIndexMap[$file->id] ?? 0; @endphp
                         @endif
-                        <div class="aspect-[4/3] overflow-hidden rounded-t-xl border-b border-gray-100 bg-gray-50">
+                        <div :class="$store.view.mode === 'grid' ? 'aspect-[4/3] overflow-hidden rounded-t-xl border-b border-gray-100 bg-gray-50' : 'h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-50'">
                             @if ($file->isImage())
                                 <button type="button" @click="$store.viewer.show({{ $galleryIndex }})" class="block h-full w-full cursor-zoom-in">
                                     <img src="{{ $file->preview_url }}" alt="{{ $file->original_name }}" class="h-full w-full object-cover transition-transform hover:scale-105">
                                 </button>
                             @elseif ($file->isPdf())
-                                <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center gap-2 bg-rose-50">
+                                <a href="{{ route('files.show', $file) }}" :class="$store.view.mode === 'grid' ? 'flex h-full w-full flex-col items-center justify-center gap-2 bg-rose-50' : 'flex h-full w-full items-center justify-center bg-rose-50'">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100">
                                         <svg viewBox="0 0 24 24" class="h-5 w-5 fill-rose-500"><path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Z"/></svg>
                                     </div>
-                                    <span class="text-xs font-bold uppercase tracking-widest text-rose-400">PDF</span>
+                                    <span x-show="$store.view.mode === 'grid'" class="text-xs font-bold uppercase tracking-widest text-rose-400">PDF</span>
                                 </a>
                             @elseif ($file->isVideo())
-                                <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center gap-2 bg-violet-50">
+                                <a href="{{ route('files.show', $file) }}" :class="$store.view.mode === 'grid' ? 'flex h-full w-full flex-col items-center justify-center gap-2 bg-violet-50' : 'flex h-full w-full items-center justify-center bg-violet-50'">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
                                         <svg viewBox="0 0 24 24" class="h-5 w-5 fill-violet-500"><path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z"/></svg>
                                     </div>
-                                    <span class="text-xs font-bold uppercase tracking-widest text-violet-400">VIDEO</span>
+                                    <span x-show="$store.view.mode === 'grid'" class="text-xs font-bold uppercase tracking-widest text-violet-400">VIDEO</span>
                                 </a>
                             @elseif ($file->isAudio())
-                                <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center gap-2 bg-green-50">
+                                <a href="{{ route('files.show', $file) }}" :class="$store.view.mode === 'grid' ? 'flex h-full w-full flex-col items-center justify-center gap-2 bg-green-50' : 'flex h-full w-full items-center justify-center bg-green-50'">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
                                         <svg viewBox="0 0 24 24" class="h-5 w-5 fill-green-500"><path d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V6.994l-9 2.572v9.737a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.402-4.909l2.31-.66a1.5 1.5 0 0 0 1.088-1.442V5.25a.75.75 0 0 1 .544-.721l10.5-3a.75.75 0 0 1 .658.122Z"/></svg>
                                     </div>
-                                    <span class="text-xs font-bold uppercase tracking-widest text-green-400">AUDIO</span>
+                                    <span x-show="$store.view.mode === 'grid'" class="text-xs font-bold uppercase tracking-widest text-green-400">AUDIO</span>
                                 </a>
                             @else
-                                <a href="{{ route('files.show', $file) }}" class="flex h-full w-full flex-col items-center justify-center gap-2 bg-gray-50">
+                                <a href="{{ route('files.show', $file) }}" :class="$store.view.mode === 'grid' ? 'flex h-full w-full flex-col items-center justify-center gap-2 bg-gray-50' : 'flex h-full w-full items-center justify-center bg-gray-50'">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-200">
                                         <svg viewBox="0 0 24 24" class="h-5 w-5 fill-gray-500"><path d="M7 2.75A2.25 2.25 0 0 0 4.75 5v14A2.25 2.25 0 0 0 7 21.25h10A2.25 2.25 0 0 0 19.25 19V8.56a2.25 2.25 0 0 0-.66-1.59l-3.56-3.56a2.25 2.25 0 0 0-1.59-.66H7Z"/></svg>
                                     </div>
-                                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400">{{ strtoupper($file->extension ?: 'FILE') }}</span>
+                                    <span x-show="$store.view.mode === 'grid'" class="text-xs font-bold uppercase tracking-widest text-gray-400">{{ strtoupper($file->extension ?: 'FILE') }}</span>
                                 </a>
                             @endif
                         </div>
 
                         {{-- File info --}}
-                        <div class="p-3">
+                        <div :class="$store.view.mode === 'grid' ? 'p-3' : 'min-w-0 flex-1'">
                             @if ($file->isImage())
                                 <button type="button" @click="$store.viewer.show({{ $galleryIndex }})" class="block w-full truncate text-left text-xs font-semibold text-gray-800 hover:text-indigo-600">{{ $file->original_name }}</button>
                             @else
@@ -504,7 +516,7 @@
                         </div>
 
                         {{-- 3-dot menu --}}
-                        <div class="absolute right-1.5 top-1.5">
+                        <div :class="$store.view.mode === 'grid' ? 'absolute right-1.5 top-1.5' : 'relative shrink-0'">
                             <button
                                 type="button"
                                 @click.prevent.stop="menuOpen = !menuOpen"
@@ -540,6 +552,7 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
 
                         {{-- Inline panels (rename/move/copy) --}}
                         <div x-show="panel === 'rename'" x-cloak x-transition class="border-t border-gray-100 p-3">
