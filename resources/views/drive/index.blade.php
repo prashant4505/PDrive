@@ -324,10 +324,10 @@
                     @endif
                 </div>
                 @if($files->isNotEmpty())
-                    <label class="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                    <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50">
                         <input
                             type="checkbox"
-                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-0"
                             :checked="@js($fileIds).every(id => $store.selection.has(id))"
                             @change="$event.target.checked ? $store.selection.selectAll(@js($fileIds)) : $store.selection.clear()"
                         >
@@ -338,21 +338,54 @@
 
             {{-- Bulk action bar --}}
             <div
-                x-data="{ bulkPanel: null }"
+                x-data="{ bulkPanel: null, menuOpen: false }"
                 x-show="$store.selection.count > 0"
                 x-cloak
                 x-transition
-                class="mb-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3"
+                class="mb-3 rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-lg shadow-gray-200/60"
             >
                 <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-sm font-semibold text-indigo-900"><span x-text="$store.selection.count"></span> selected</span>
-                    <button type="button" @click="bulkPanel = bulkPanel === 'move' ? null : 'move'" class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Move</button>
-                    <button type="button" @click="bulkPanel = bulkPanel === 'copy' ? null : 'copy'" class="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Copy</button>
-                    <button type="button" @click="bulkPanel = bulkPanel === 'delete' ? null : 'delete'" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50">Delete</button>
-                    <button type="button" @click="$store.selection.clear(); bulkPanel = null" class="ml-auto text-xs font-medium text-gray-500 hover:text-gray-700">Clear selection</button>
+                    <div class="flex items-center gap-2.5 pr-3">
+                        <span class="flex h-7 min-w-7 items-center justify-center rounded-full bg-indigo-600 px-2.5 text-xs font-bold text-white" x-text="$store.selection.count"></span>
+                        <span class="text-sm font-semibold text-gray-700">selected</span>
+                    </div>
+
+                    <div class="h-5 w-px bg-gray-200"></div>
+
+                    <div class="relative" @click.outside="menuOpen = false">
+                        <button type="button" @click="menuOpen = !menuOpen" :class="menuOpen ? 'border-gray-300 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-700 hover:bg-gray-50'" class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold">
+                            Actions
+                            <svg class="h-3.5 w-3.5 transition-transform" :class="menuOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+
+                        <div
+                            x-show="menuOpen"
+                            x-cloak
+                            x-transition.opacity.scale.origin.top.left
+                            class="absolute left-0 top-9 z-40 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl shadow-gray-200/80"
+                        >
+                            <button type="button" @click="bulkPanel = bulkPanel === 'move' ? null : 'move'; menuOpen = false" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <svg class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                                Move
+                            </button>
+                            <button type="button" @click="bulkPanel = bulkPanel === 'copy' ? null : 'copy'; menuOpen = false" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <svg class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>
+                                Copy
+                            </button>
+                            <div class="my-1 h-px bg-gray-100"></div>
+                            <button type="button" @click="bulkPanel = bulkPanel === 'delete' ? null : 'delete'; menuOpen = false" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" @click="$store.selection.clear(); bulkPanel = null" title="Clear selection" class="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
 
-                <div x-show="bulkPanel === 'move'" x-cloak x-transition class="mt-3">
+                <div x-show="bulkPanel === 'move'" x-cloak x-transition class="mt-3 border-t border-gray-100 pt-3">
                     <form method="POST" action="{{ route('files.bulk-move') }}" class="flex flex-wrap items-center gap-2">
                         @csrf @method('PATCH')
                         <template x-for="id in $store.selection.ids" :key="id">
@@ -367,7 +400,7 @@
                     </form>
                 </div>
 
-                <div x-show="bulkPanel === 'copy'" x-cloak x-transition class="mt-3">
+                <div x-show="bulkPanel === 'copy'" x-cloak x-transition class="mt-3 border-t border-gray-100 pt-3">
                     <form method="POST" action="{{ route('files.bulk-copy') }}" class="flex flex-wrap items-center gap-2">
                         @csrf
                         <template x-for="id in $store.selection.ids" :key="id">
@@ -382,7 +415,7 @@
                     </form>
                 </div>
 
-                <div x-show="bulkPanel === 'delete'" x-cloak x-transition class="mt-3">
+                <div x-show="bulkPanel === 'delete'" x-cloak x-transition class="mt-3 border-t border-gray-100 pt-3">
                     <form method="POST" action="{{ route('files.bulk-destroy') }}" class="flex flex-wrap items-center gap-3">
                         @csrf @method('DELETE')
                         <template x-for="id in $store.selection.ids" :key="id">
