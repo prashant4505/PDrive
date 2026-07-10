@@ -2,9 +2,32 @@
     @csrf
 </form>
 
-<form method="post" action="{{ route('profile.update') }}" class="space-y-5">
+<form method="post" action="{{ route('profile.update') }}" class="space-y-5" enctype="multipart/form-data">
     @csrf
     @method('patch')
+
+    <div>
+        <x-input-label for="avatar" :value="__('Profile picture')" />
+        <div class="mt-2 flex items-center gap-4">
+            <img
+                x-ref="avatarPreview"
+                src="{{ $user->avatarUrl() ?? 'data:image/svg+xml;utf8,'.rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#e5e7eb"/><text x="32" y="41" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#6b7280">'.strtoupper(Str::substr($user->name, 0, 1)).'</text></svg>') }}"
+                alt="Profile picture"
+                class="h-16 w-16 rounded-full object-cover border border-gray-200"
+            >
+            <div>
+                <input
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    accept="image/*"
+                    class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                    x-on:change="const file = $event.target.files[0]; if (file) { $refs.avatarPreview.src = URL.createObjectURL(file); }"
+                >
+                <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
+            </div>
+        </div>
+    </div>
 
     <div>
         <x-input-label for="name" :value="__('Full name')" />
