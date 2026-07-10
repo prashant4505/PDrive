@@ -40,7 +40,7 @@
                     {{-- User dropdown --}}
                     <div x-data="{ open: false }" class="relative" @click.outside="open = false">
                         <button @click="open = !open" class="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold uppercase text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                            <x-user-avatar :user="Auth::user()" size="h-6 w-6" textSize="text-[11px]" />
                             <span class="hidden sm:inline max-w-[120px] truncate">{{ Auth::user()->name }}</span>
                             <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />

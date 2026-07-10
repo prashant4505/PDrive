@@ -81,7 +81,7 @@
     {{-- Fallback user info at bottom --}}
     <div class="border-t border-white/[0.06] px-5 py-4">
         <div class="flex items-center gap-2.5">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold uppercase text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+            <x-user-avatar :user="Auth::user()" size="h-7 w-7" textSize="text-xs" />
             <div class="min-w-0">
                 <p class="truncate text-xs font-semibold text-gray-300">{{ Auth::user()->name }}</p>
             </div>
